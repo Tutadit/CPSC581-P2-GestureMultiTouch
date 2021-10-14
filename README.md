@@ -4,6 +4,9 @@ CPSC581 Project 2: Design and implement an alternative to "Slide to Unlock" usin
 ## Project of choice: TBD
 ## Project site: http://cpsc581.p2.1.osloz.com
 ## Structure:
+
+Super simple html app here:
+
 * ```index.html``` - Start of app
 * ```js/``` - JavaScript scripts
 * ```js/start``` - Start of custom scripts
