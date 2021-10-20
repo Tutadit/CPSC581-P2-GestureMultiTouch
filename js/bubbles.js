@@ -152,10 +152,8 @@ class Bubbles {
       }
     );
     this.bubble.status =
-      this.bubble.status === Status.growing
-        ? Status.shrinking
-        : Status.growing;
-    // TODO: In here is when the bubble switches from growing to 
+      this.bubble.status === Status.growing ? Status.shrinking : Status.growing;
+    // TODO: In here is when the bubble switches from growing to
     //       shrinking. We can use this to update pattern recognition.
   }
 
@@ -172,10 +170,15 @@ class Bubbles {
     //      fact that the propety this.bubble_animate_from.duration
     //      determines the duration of the animation from the start_size
     //      to the end size.
-    return this.radiuses * 1000;
+    return this.bubble_animate_from.duration;
   }
 }
 
-export function getBubbles(radiuses = 8, start_size = 2, end_size = 30.0) {
-  return new Bubbles(radiuses, start_size, end_size);
+export function getBubbles(
+  radiuses = 10,
+  start_size = 0.33,
+  end_size = 10.0,
+  duration = 5000
+) {
+  return new Bubbles(radiuses, start_size, end_size, duration);
 }
