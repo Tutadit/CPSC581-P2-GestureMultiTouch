@@ -1,3 +1,9 @@
+import { getBubbles } from "./bubbles.js";
+
 $(document).ready(function () {
-   console.log("yes")         
+  
+
+  const bubbles = getBubbles();
+
+  
 });
