@@ -1,6 +1,6 @@
 import {
+  tweenPercentDone,
   getCssSize,
-  getCssPropety,
   getCssSquareFromSize,
   getCssSquareSizeNumber,
 } from "./utilities.js";
@@ -139,9 +139,6 @@ class Bubbles {
     } else {
       next_ring = this.getNextBiggerRing();
     }
-
-    let color_index = next_ring - 1;
-    this.blocks.bubble.css({ "background-color": Colors[color_index] });
     this.rings.next_ring = next_ring;
   }
 
@@ -182,44 +179,27 @@ class Bubbles {
   }
 
   getEventHandler(event) {
-    this.eventHandler[event] = function () {
+    this.eventHandler[event] = function (e) {
+      e.preventDefault();
       this.stopUpdate();
       this.updateBubbleStatus(event);
       this.update();
     };
-
     return this.eventHandler[event].bind(this);
   }
 
   animateBubble() {
+    this.changed_color = false;
     this.blocks.bubble.animate(this.getAnimatedProperties(), {
       duration: this.rings.duration_per_ring,
       easing: "easeOutBounce",
-      complete: function () {
-        this.update();
-      }.bind(this),
+      complete: this.update.bind(this),
       step: function (now, tween) {
-        let end = tween.end;
-        let current = tween.now;
-        let percentage_done = 0;
-        if (current < end) percentage_done = current / end;
-        else percentage_done = end / current;
+        if (this.changed_color) return;
+        let percentage_done = tweenPercentDone(tween);
         if (percentage_done < 0.9) return;
-
-        let rings = this.blocks.rings.children("div");
-        rings.each(function (i, ring) {
-          $($(ring).children().first()).css({
-            border: "none",
-            "box-shadow":"0px 0px 3px 1px rgba(0, 0, 0, 0.46)"
-          });
-        });
-        let ring = $(rings.get(this.rings.next_ring - 1))
-          .children()
-          .first();
-        $(ring).css({
-          border: "6px solid " + Colors[this.rings.next_ring - 1],
-          "box-shadow":"0px 0px 4px 3px " + Colors[this.rings.next_ring - 1]
-        });
+        this.setColor();
+        this.changed_color = true;
       }.bind(this),
     });
   }
@@ -230,6 +210,46 @@ class Bubbles {
     if (next_ring === 0) next_size = this.bubble.start_size;
     else next_size = this.rings.sizes[next_ring - 1];
     return getCssSquareFromSize(next_size);
+  }
+
+  setColor() {
+    this.resetRingsColor();
+    if (this.rings.next_ring === 0) {
+      this.blocks.bubble.css({
+        "background-color": "",
+      });
+      return;
+    }
+
+    this.updateBubbleColor();
+    this.updateRingColor();
+  }
+
+  updateBubbleColor() {
+    this.blocks.bubble.css({
+      "background-color": Colors[this.rings.next_ring - 1],
+    });
+  }
+
+  updateRingColor() {
+    let rings = this.blocks.rings.children("div");
+    let ring = $(rings.get(this.rings.next_ring - 1))
+      .children()
+      .first();
+    $(ring).css({
+      border: "3px solid " + Colors[this.rings.next_ring - 1],
+      "box-shadow": "0px 0px 4px 3px " + Colors[this.rings.next_ring - 1],
+    });
+  }
+
+  resetRingsColor() {
+    let rings = this.blocks.rings.children("div");
+    rings.each(function (i, ring) {
+      $($(ring).children().first()).css({
+        border: "",
+        "box-shadow": "",
+      });
+    });
   }
 }
 

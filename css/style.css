@@ -1,9 +1,37 @@
+body {
+  font-family: Roboto, "Helvetica Neue";
+}
+
 .screen {
   position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen.lock-screen {
+  background-image: url("https://eskipaper.com/images/simple-wallpaper-1.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.screen-content {
+  height: 20%;
+}
+
+.screen-content .clock {
+  font-size:5vh;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0px 0px 6px rgba(158,158,158,0.79);
 }
 
 .action-button {
@@ -14,6 +42,12 @@
   height: 100vh;
   background-color: #fff;
   opacity: 0;
+}
+
+.bubbles {
+  width: 100%;
+  height: 80%;
+  position: relative;
 }
 
 .bubble-rings {
@@ -27,8 +61,8 @@
 .bubble-ring {
   border-radius: 1000px;
   
-  -webkit-box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.46);
-  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.46);
+  -webkit-box-shadow: 0px 0px 3px 1px rgba(230,230,230, 0.86);
+  box-shadow: 0px 0px 3px 1px rgba(230,230,230, 0.86);
 }
 
 .bubble-wrapper {
@@ -46,7 +80,7 @@
   width: 30px;
   height: 30px;
   border-radius: 1000px;
-  background-color: #000;
+  background-color: rgb(139, 139, 139);
   opacity: 1;
   -webkit-box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.46);
   box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.46);
