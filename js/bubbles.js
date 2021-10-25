@@ -1,13 +1,17 @@
-import { getCssPropety } from "./utilities.js";
+import {
+  getCssSize,
+  getCssPropety,
+  getCssSquareFromSize,
+  getCssSquareSizeNumber,
+} from "./utilities.js";
 
-const unit = "rem";
-const unit_multiplier = 1.0;
-const update_interval = 100; // How often ( in milliseconds ) does the size update
+// How often ( in milliseconds ) does the size update
 
 const Status = {
   growing: "growing",
   shrinking: "shrinking",
-  inactive: "inactive",
+  start: "growing",
+  end: "shrinking",
 };
 
 const Colors = [
@@ -23,11 +27,12 @@ const Colors = [
   "#007C77",
 ];
 
+const update_interval = 100;
+
 class Bubbles {
   constructor(rings = 10, start_size = 0.33, end_size = 10.0, duration = 5000) {
     this.initiateBlocks();
-    this.initiateBubbleAnimateToProperties(start_size, end_size, duration);
-    this.initiateBubble(start_size, end_size);
+    this.initiateBubble(start_size, end_size, duration);
     this.initiateEvents();
     this.initiateRings(rings);
     this.addEventsToButton();
@@ -41,31 +46,16 @@ class Bubbles {
     };
   }
 
-  initiateBubbleAnimateToProperties(start_size, end_size, duration) {
-    this.bubble_animate_from = {
-      start: {
-        width: end_size * unit_multiplier + unit,
-        height: end_size * unit_multiplier + unit,
-      },
-      end: {
-        width: start_size * unit_multiplier + unit,
-        height: start_size * unit_multiplier + unit,
-      },
-      duration: duration,
-    };
-  }
-
-  initiateBubble(start_size, end_size) {
-    this.blocks.bubble.css({
-      ...this.bubble_animate_from.end,
-    });
+  initiateBubble(start_size, end_size, duration) {
+    this.blocks.bubble.css(getCssSquareFromSize(start_size));
     this.bubble = {
       start_size: start_size,
       end_size: end_size,
       current_size: 0,
-      status: Status.inactive,
+      status: Status.growing,
+      duration: duration,
     };
-    this.updateBubbleSize();
+    this.updateBubble();
   }
 
   initiateEvents() {
@@ -80,19 +70,32 @@ class Bubbles {
     };
   }
 
-  initiateRings(rings) {
-    this.rings = rings;
+  initiateRings(total_rings) {
     let start = this.bubble.start_size;
     let end = this.bubble.end_size;
-    this.radius_increment = (end - start) / rings;
-    this.duration_per_ring = this.bubble_animate_from.duration / this.rings;
-    for (var ring = 1; ring <= this.rings; ring++) {
-      let radius_size = this.radius_increment * ring + start + unit;
+    this.rings = {
+      total: total_rings,
+      next_ring: 1,
+      duration_per_ring: this.bubble.duration / total_rings,
+      radius_increment: (end - start) / total_rings,
+      sizes: [],
+    };
+    this.renderRings();
+  }
+
+  renderRings() {
+    let total_rings = this.rings.total;
+    let radius_increment = this.rings.radius_increment;
+    let start = this.bubble.start_size;
+    for (var ring = 1; ring <= total_rings; ring++) {
+      let diameter_size = radius_increment * ring + start;
+      let diameter_css_size = getCssSize(diameter_size);
+      this.rings.sizes = [...this.rings.sizes, diameter_size];
       this.blocks.rings.append(
         "<div class='bubble-wrapper'><div style='width:" +
-          radius_size +
+          diameter_css_size +
           "; height:" +
-          radius_size +
+          diameter_css_size +
           ";' class='bubble-ring ring-" +
           ring +
           "'></div></div>"
@@ -101,66 +104,75 @@ class Bubbles {
   }
 
   update() {
-    this.updateBubbleSize();
+    this.updateBubble();
     this.updateRings();
-    // TODO:  In here we will be perfomring the checks to see how big the
-    //        bubble has grown/shrank. This function runs every update_interval
-    //        ms.
-    //
-    //        Thus far I've made the updateBubbleSize() function which
-    //        updates this.bubble.current_size to represent the bubbles
-    //        current size.
-    //
-    //        What to do:
-    //
-    //        Use this.radiuses, this.blocks.radiuses, and this.bubble
-    //        to register when the bubble has surpassed in size each of
-    //        the radiuses. css styling will be required in order to
-    //        register the activation of the ring.
-    //
+    if (this.reachedEnd()) return;
+    this.animateBubble();
   }
 
-  updateBubbleSize() {
+  stopUpdate() {
+    this.blocks.bubble.stop();
+  }
+
+  updateBubble() {
     let bubble = this.blocks.bubble;
-    let current_width = getCssPropety(bubble, "width");
-    current_width = current_width.substr(0, current_width.length - unit.length);
-    let current_size = current_width / unit_multiplier;
-    this.bubble.current_size = current_size;
-    if (
-      this.bubble.status === Status.shrinking &&
-      this.bubble.current_size === this.bubble.start_size
-    ) {
-      clearInterval(this.current_interval);
-    }
-    if (
-      this.bubble.status === Status.growing &&
-      this.bubble.current_size === this.bubble.end_size
-    ) {
-      clearInterval(this.current_interval);
-    }
+    this.bubble.current_size = getCssSquareSizeNumber(bubble);
+  }
+
+  updateBubbleStatus(event) {
+    this.bubble.status = Status[event];
+  }
+
+  reachedEnd() {
+    return (
+      (this.bubble.status === Status.shrinking &&
+        this.bubble.current_size <= this.bubble.start_size) ||
+      (this.bubble.status === Status.growing &&
+        this.bubble.current_size >= this.bubble.end_size)
+    );
   }
 
   updateRings() {
-    let children = this.blocks.rings.children("div")
-    if (this.bubble.status === Status.shrinking)
-      children = children.get().reverse()
-    $(children).each(
-      function (i, ring) {
-        let ring_block = $(ring).children("div").first();
-        let current_width = getCssPropety(ring_block, "width");
-        current_width = current_width.substr(
-          0,
-          current_width.length - unit.length
-        );
-        if (this.bubble.status === Status.growing) {
-          if (this.bubble.current_size >= current_width)
-            this.blocks.bubble.css({ "background-color": Colors[i] });
-        } else {
-          if (this.bubble.current_size <= current_width)
-            this.blocks.bubble.css({ "background-color": Colors[this.rings - i - 1] });
-        }
-      }.bind(this)
-    );
+    let next_ring = 0;
+    if (this.bubble.status === Status.growing) {
+      next_ring = this.getNextSmallerRing();
+    } else {
+      next_ring = this.getNextBiggerRing();
+    }
+
+    let color_index = next_ring - 1;
+    this.blocks.bubble.css({ "background-color": Colors[color_index] });
+    this.rings.next_ring = next_ring;
+  }
+
+  getNextSmallerRing() {
+    let sizes = this.rings.sizes;
+    let current_size = this.bubble.current_size;
+
+    let next_ring = 0;
+    for (let i = 0; i < sizes.length; i++) {
+      let ring_size = sizes[i];
+      if (current_size < ring_size) {
+        next_ring = i + 1;
+        break;
+      }
+    }
+    return next_ring;
+  }
+
+  getNextBiggerRing() {
+    let sizes = this.rings.sizes;
+    let current_size = this.bubble.current_size;
+
+    let next_ring = 0;
+    for (let i = sizes.length - 1; i >= 0; i--) {
+      let ring_size = sizes[i];
+      if (current_size > ring_size) {
+        next_ring = i + 1;
+        break;
+      }
+    }
+    return next_ring;
   }
 
   addEventsToButton() {
@@ -171,42 +183,53 @@ class Bubbles {
 
   getEventHandler(event) {
     this.eventHandler[event] = function () {
-      if (this.current_interval) clearInterval(this.current_interval);
-      this.animateBubble(event);
-      this.current_interval = setInterval(
-        this.update.bind(this),
-        update_interval
-      );
+      this.stopUpdate();
+      this.updateBubbleStatus(event);
+      this.update();
     };
 
     return this.eventHandler[event].bind(this);
   }
 
-  animateBubble(event) {
-    let animated_properties = this.bubble_animate_from[event];
-    this.blocks.bubble.stop();
-    this.blocks.bubble.animate(
-      {
-        ...animated_properties,
-      },
-      {
-        duration: this.getCurrentDuration(event),
-        easing:"linear"
-      }
-    );
-    this.bubble.status =
-      this.bubble.status === Status.growing ? Status.shrinking : Status.growing;
-    // TODO: In here is when the bubble switches from growing to
-    //       shrinking. We can use this to update pattern recognition.
+  animateBubble() {
+    this.blocks.bubble.animate(this.getAnimatedProperties(), {
+      duration: this.rings.duration_per_ring,
+      easing: "easeOutBounce",
+      complete: function () {
+        this.update();
+      }.bind(this),
+      step: function (now, tween) {
+        let end = tween.end;
+        let current = tween.now;
+        let percentage_done = 0;
+        if (current < end) percentage_done = current / end;
+        else percentage_done = end / current;
+        if (percentage_done < 0.9) return;
+
+        let rings = this.blocks.rings.children("div");
+        rings.each(function (i, ring) {
+          $($(ring).children().first()).css({
+            border: "none",
+            "box-shadow":"0px 0px 3px 1px rgba(0, 0, 0, 0.46)"
+          });
+        });
+        let ring = $(rings.get(this.rings.next_ring - 1))
+          .children()
+          .first();
+        $(ring).css({
+          border: "6px solid " + Colors[this.rings.next_ring - 1],
+          "box-shadow":"0px 0px 4px 3px " + Colors[this.rings.next_ring - 1]
+        });
+      }.bind(this),
+    });
   }
 
-  getCurrentDuration(event) {
-    let size_left =
-      event === "start"
-        ? this.bubble.end_size - this.bubble.current_size
-        : this.bubble.current_size - this.bubble.start_size;
-    let rings_left = size_left / this.radius_increment;
-    return rings_left * this.duration_per_ring;
+  getAnimatedProperties() {
+    let next_ring = this.rings.next_ring;
+    let next_size = 0;
+    if (next_ring === 0) next_size = this.bubble.start_size;
+    else next_size = this.rings.sizes[next_ring - 1];
+    return getCssSquareFromSize(next_size);
   }
 }
 
