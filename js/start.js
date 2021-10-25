@@ -1,10 +1,10 @@
 import { getBubbles } from "./bubbles.js";
 
 $(document).ready(function () {
-  let radiuses = 10;
+  let rings = 6;
   let start_size = 1;
   let end_size = 40.0;
-  let duration = 3000;
+  let duration = 5000;
 
-  const bubbles = getBubbles(radiuses, start_size, end_size, duration);
+  const bubbles = getBubbles(rings, start_size, end_size, duration);
 });
