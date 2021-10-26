@@ -19,7 +19,7 @@ export class Bubbles {
     this.initiateBlocks();
     this.initiateEvents();
     this.initiatePatternRecognition();
-    this.regeneratePatternOnInfo()
+    this.regeneratePatternOnInfo();
   }
 
   initiateBlocks() {
@@ -54,12 +54,12 @@ export class Bubbles {
   }
 
   update() {
-    if(this.track_now) {
+    if (this.track_now) {
       this.track(this.track_now);
       this.track_now = null;
     }
-    if(this.track_next) {
-      this.track_now = this.track_next      
+    if (this.track_next) {
+      this.track_now = this.track_next;
       this.track_next = null;
     }
     this.bubble.update();
@@ -102,8 +102,8 @@ export class Bubbles {
       this.onPatternReadDone();
       this.onPatternReadDone = null;
     }
-    if(this.onPlayFinish) {
-      this.onPlayFinish()
+    if (this.onPlayFinish) {
+      this.onPlayFinish();
       this.onPlayFinish = null;
     }
 
@@ -111,28 +111,34 @@ export class Bubbles {
     this.rings.hide();
     this.pattern_match = false;
     this.started_attempt = false;
-    this.bubble.setDuration(this.duration)
-    this.bubble.updateColor("")
-    $(this.blocks.tracker.children().get().reverse()).each((i,trac) => {
-      let delay = 150
-      setTimeout(function() {
-        $(trac).css({
-          "transform":"translateY(100px)"
-        })
-      }.bind(trac),delay)  
+    this.bubble.setDuration(this.duration);
+    this.bubble.updateColor("");
+    $(this.blocks.tracker.children().get().reverse()).each((i, trac) => {
+      let delay = 150;
+      setTimeout(
+        function () {
+          $(trac).css({
+            transform: "translateY(100px)",
+          });
+        }.bind(trac),
+        delay
+      );
 
-      setTimeout(function() {
-        $(this).remove()
-      }.bind(trac),delay + 100)      
-    })
-    this.regeneratePatternOnInfo()
+      setTimeout(
+        function () {
+          $(this).remove();
+        }.bind(trac),
+        delay + 100
+      );
+    });
+    this.regeneratePatternOnInfo();
   }
   regeneratePatternOnInfo() {
-    $(".current-pattern").text("")
-    for(let i = 0; i < this.pattern_to_recognize.length; i++) {
+    $(".current-pattern").text("");
+    for (let i = 0; i < this.pattern_to_recognize.length; i++) {
       $(".current-pattern").append(
         "<div style='background-color:" +
-          Colors[this.pattern_to_recognize[i]-1] +
+          Colors[this.pattern_to_recognize[i] - 1] +
           "' class='track'></div>"
       );
     }
@@ -175,7 +181,7 @@ export class Bubbles {
     } else {
       this.play_ring = this.play_ring + 1;
       next = next_in_pattern;
-      this.track_next = next
+      this.track_next = next;
     }
     return next;
   }
@@ -213,13 +219,18 @@ export class Bubbles {
       this.started_attempt = true;
       return;
     }
-    if(this.bubble.status === Status.growing && this.next_ring === 1) return
+    if (this.bubble.status === Status.growing && this.next_ring === 1) return;
 
     let ring_activated = 0;
     if (this.read_for_pattern) {
       if (this.bubble.status === Status.growing)
         ring_activated = this.next_ring - 1;
       else ring_activated = this.next_ring + 1;
+      if (
+        ring_activated ===
+        this.pattern_to_recognize[this.pattern_to_recognize.length - 1]
+      )
+        return;
       this.pattern_to_recognize = [
         ...this.pattern_to_recognize,
         ring_activated,
@@ -228,11 +239,14 @@ export class Bubbles {
       if (this.bubble.status === Status.growing)
         ring_activated = this.next_ring - 1;
       else ring_activated = this.next_ring + 1;
+      if (
+        ring_activated === this.current_attempt[this.current_attempt.length - 1]
+      )
+        return;
       this.current_attempt = [...this.current_attempt, ring_activated];
     }
-    
-    this.track(ring_activated)
 
+    this.track(ring_activated);
     if (arraysEqual(this.current_attempt, this.pattern_to_recognize))
       this.patternMatched();
   }
