@@ -40,7 +40,7 @@ export class Bubbles {
 
   initiatePatternRecognition() {
     this.read_for_pattern = false;
-    this.pattern_to_recognize = [4, 2, 3];
+    this.pattern_to_recognize = [2, 1, 4];
     this.current_attempt = [];
     this.play_ring = Infinity;
   }
@@ -213,7 +213,7 @@ export class Bubbles {
       this.started_attempt = true;
       return;
     }
-    if(this.next_ring === 1) return
+    if(this.bubble.status === Status.growing && this.next_ring === 1) return
 
     let ring_activated = 0;
     if (this.read_for_pattern) {

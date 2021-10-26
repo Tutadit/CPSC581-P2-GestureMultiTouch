@@ -7,10 +7,10 @@ function onPatternMatch() {
 }
 
 $(document).ready(function () {
-  let rings = 6;
+  let rings = 5;
   let start_size = 1;
   let end_size = 40.0;
-  let duration = 900;
+  let duration = 560;
 
   extendJqueryEase();
   const bubbles = new Bubbles(
