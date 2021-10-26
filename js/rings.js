@@ -1,4 +1,4 @@
-import { getCssSize, Status, Colors } from "./utilities.js";
+import { getCssSize, getCssPropety, Colors } from "./utilities.js";
 
 export class Rings {
   constructor(total_rings, start_size, end_size) {
@@ -18,16 +18,28 @@ export class Rings {
       let diameter_size = radius_increment * ring + start;
       let diameter_css_size = getCssSize(diameter_size);
       this.sizes = [...this.sizes, diameter_size];
+      let delay = (ring - 1) * 100;
       this.block.append(
         "<div class='bubble-wrapper'><div style='width:" +
           diameter_css_size +
           "; height:" +
           diameter_css_size +
-          ";' class='bubble-ring ring-" +
+          ";transition-delay: " +
+          delay +
+          "ms" +
+          ";' class='bubble-ring hidden ring-" +
           ring +
           "'></div></div>"
       );
     }
+  }
+
+  show() {
+    $(".bubble-ring").removeClass("hidden");
+  }
+
+  hide() {
+    $(".bubble-ring").addClass("hidden");
   }
 
   getNextBiggerRing(current_size) {
@@ -63,20 +75,25 @@ export class Rings {
 
   updateRingColor(ring_to_update) {
     let rings = this.block.children("div");
-    let ring = $(rings.get(ring_to_update)).children().first();
+    let ring = $(rings.get(ring_to_update - 1))
+      .children()
+      .first();
     $(ring).css({
-      border: "3px solid " + Colors[ring_to_update],
-      "box-shadow": "0px 0px 4px 3px " + Colors[ring_to_update],
+      border: "3px solid " + Colors[ring_to_update - 1],
+      "box-shadow": "0px 0px 4px 3px " + Colors[ring_to_update - 1],
     });
   }
 
   resetRingsColor() {
-    let rings = this.block.children("div");
-    rings.each(function (i, ring) {
-      $($(ring).children().first()).css({
-        border: "",
-        "box-shadow": "",
-      });
+    let rings = this.block.children();
+
+    rings.each(function (i, ring_e) {
+      let ring = $($(ring_e).children().first());
+      let prev_delay = getCssPropety(ring, "transition-delay");
+      let prev_duration = getCssPropety(ring, "transition-duration");
+      ring.css({ "transition-delay": 0, "transition-duration": 0});
+      ring.css({ "box-shadow": "", border: "" });
+      ring.css({ "transition-delay": prev_delay, "transition-duration": prev_duration});
     });
   }
 }

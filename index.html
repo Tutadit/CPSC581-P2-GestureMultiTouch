@@ -7,20 +7,58 @@
   </head>
 
   <body>
+    <div class="screen main-screen hidden">
+      <div class="settings-panel"></div>
+      <div class="settings-wrapper">
+        <div class="settings">
+          <button id="play">Play Pattern</button>
+          <button id="change">Change Pattern</button>
+          <button id="lock">Lock Screen</button>
+        </div>
+      </div>
+    </div>
     <div class="screen lock-screen">
       <div class="screen-content">
         <div class="clock">12:44</div>
       </div>
-      <div class="bubbles">
-        <div class="bubble-rings"></div>
-        <div class="bubble-wrapper">
-          <div class="bubble"></div>
-        </div>
+      <button class="help-button">?</button>
+    </div>
+    <div class="bubbles">
+      <div class="bubble-rings"></div>
+      <div class="bubble-wrapper">
+        <div class="bubble"></div>
+      </div>
+      <div class="bubble-tracker"></div>
+    </div>
+    <button class="action-button"></button>
+    <div class="info hidden">
+      <button class="close-info">x</button>
+      <div class="text">
+        <h1>Bubble "Slide to Unlock" alternative</h1>
+        <p>
+          This is the demo for the "bubble" concept. The goal is to provide an
+          alternative functionality to "Slide to Unlock" with the benefit of
+          authentication.
+        </p>
+        <h2>How it works?</h2>
+        <p>
+          When you press and hold you'll notice that a bubble starts growing
+          from the center of the screen, when you let go it shrinks. You'll also
+          notice some rings sorrounding the bubble. Each ring turns the bubble a
+          different color when the bubble reaches that ring. In order to unlock
+          the phone, you must use this mechanism to provide the pattern set as
+          the password.
+        </p>
+        <h2>How to do the pattern?</h2>
+        <p>
+          Expand the bubble to the first color in the pattern, then let go until
+          the bubble shrinks to the next color, repeat until all colors in the
+          pattern are selected
+        </p>
+        <h2>The pattern:</h2>
+        <div class="current-pattern"></div>
       </div>
     </div>
-
-    <button class="action-button"></button>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="module" src="js/start.js"></script>
   </body>

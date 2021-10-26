@@ -9,16 +9,13 @@ export const Status = {
 };
 
 export const Colors = [
-  "#FFE66D",
-  "#4ECDC4",
-  "#FF6B6B",
-  "#802392",
-  "#2E4057",
-  "#750D37",
-  "#562C2C",
-  "#136F63",
-  "#F686BD",
-  "#007C77",
+  "#0D3B66",//Blue
+  "#F95738",//Orange
+  "#F6AE2D",//Yellow
+  "#28965A",//Green
+  "#E9190F",//Red
+  "#A0D2DB",//Light blue
+  "#540D6E",//Purple
 ];
 
 export function getCssPropety(block, property) {
@@ -84,3 +81,27 @@ export function tweenPercentDone(tween) {
   else percentage_done = end / current;  
   return percentage_done;
 }
+
+export function getEvent(type) {
+  if (type === 'start') 
+    return  "ontouchstart" in document.documentElement ? "touchstart" : "mousedown"
+  return "ontouchend" in document.documentElement ? "touchend" : "mouseup"
+}
+
+export function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length !== b.length) return false;
+
+  // If you don't care about the order of the elements inside
+  // the array, you should sort both arrays here.
+  // Please note that calling sort on an array will modify that array.
+  // you might want to clone your array first.
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+

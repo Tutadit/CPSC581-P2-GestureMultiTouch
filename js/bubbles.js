@@ -1,124 +1,258 @@
-import {
-  tweenPercentDone,
-  getCssSize,
-  getCssSquareFromSize,
-  getCssSquareSizeNumber,
-  Status,
-  Colors,
-} from "./utilities.js";
+import { Status, Colors, getEvent, arraysEqual } from "./utilities.js";
 
 import { Rings } from "./rings.js";
+import { Bubble } from "./bubble.js";
 
-// How often ( in milliseconds ) does the size update
-
-const update_interval = 100;
-
-class Bubbles {
-  constructor(rings = 10, start_size = 0.33, end_size = 10.0, duration = 5000) {
+export class Bubbles {
+  constructor(
+    rings = 10,
+    start_size = 0.33,
+    end_size = 10.0,
+    duration = 5000,
+    onPatternMatch
+  ) {
+    this.duration = duration;
     this.rings = new Rings(rings, start_size, end_size);
+    this.bubble = new Bubble(start_size, end_size, duration);
+    this.next_ring = 0;
+    this.onPatternMatch = onPatternMatch;
     this.initiateBlocks();
-    this.initiateBubble(start_size, end_size, duration);
     this.initiateEvents();
-    this.addEventsToButton();
     this.initiatePatternRecognition();
+    this.regeneratePatternOnInfo()
   }
 
   initiateBlocks() {
     this.blocks = {
-      bubble: $(".bubble"),
       button: $("button.action-button"),
+      tracker: $(".bubble-tracker"),
     };
-  }
-
-  initiateBubble(start_size, end_size, duration) {
-    this.blocks.bubble.css(getCssSquareFromSize(start_size));
-    this.bubble = {
-      start_size: start_size,
-      end_size: end_size,
-      current_size: 0,
-      status: Status.growing,
-      duration: duration,
-      next_ring: 1,
-    };
-    this.updateBubble();
   }
 
   initiateEvents() {
     this.events = {
-      start:
-        "ontouchstart" in document.documentElement ? "touchstart" : "mousedown",
-      end: "ontouchend" in document.documentElement ? "touchend" : "mouseup",
+      start: getEvent("start"),
+      end: getEvent("end"),
     };
-    this.eventHandler = {
-      start: null,
-      end: null,
-    };
+    this.eventHandler = {};
+    this.addEventsToButton();
   }
 
   initiatePatternRecognition() {
-    this.pattern_to_recognize = [1, 2, 3];
+    this.read_for_pattern = false;
+    this.pattern_to_recognize = [4, 2, 3];
     this.current_attempt = [];
+    this.play_ring = Infinity;
+  }
+
+  setPattern(onDone) {
+    this.next_ring = 0;
+    this.rings.show();
+    this.onPatternReadDone = onDone;
+    this.pattern_to_recognize = [];
+    this.read_for_pattern = true;
   }
 
   update() {
-    this.updateBubble();
-    if (this.reachedEnd()) return;
+    if(this.track_now) {
+      this.track(this.track_now);
+      this.track_now = null;
+    }
+    if(this.track_next) {
+      this.track_now = this.track_next      
+      this.track_next = null;
+    }
+    this.bubble.update();
+    this.animate();
+  }
 
-    if (this.bubble.next_ring === 0)
-      this.animation_timeout = setTimeout(
-        function () {
-          this.animateBubble();
-          this.current_attempt = [];
-        }.bind(this),
-        this.bubble.duration * 1.5
-      );
+  animate() {
+    this.clearAnimation();
+    if (this.next_ring === -1) this.animateBubbleDelayed(0);
+    else if (this.next_ring === 0) this.animateBubbleDelayed();
     else this.animateBubble();
   }
 
-  getNextRing() {
-    let next_ring = 0;
-    if (this.bubble.status === Status.growing) {
-      next_ring = this.rings.getNextBiggerRing(this.bubble.current_size);
-    } else {
-      next_ring = this.rings.getNextSmallerRing(this.bubble.current_size);
+  clearAnimation() {
+    this.bubble.stop();
+    if (this.animation_timeout) {
+      clearTimeout(this.animation_timeout);
+      this.animation_timeout = null;
     }
-    return next_ring;
   }
 
-  stopUpdate() {
-    this.blocks.bubble.stop();
+  animateBubbleDelayed(duration = this.duration * 1.5) {
+    this.animation_timeout = setTimeout(
+      function () {
+        this.bubble.animate(
+          this.getNextSize(),
+          this.end.bind(this),
+          this.nextRingReached.bind(this)
+        );
+      }.bind(this),
+      duration
+    );
   }
 
-  updateBubble() {
-    let bubble = this.blocks.bubble;
-    this.bubble.current_size = getCssSquareSizeNumber(bubble);
-    this.bubble.next_ring = this.getNextRing();
+  end() {
+    this.next_ring = 0;
+    this.current_attempt = [];
+    this.read_for_pattern = false;
+    if (this.onPatternReadDone) {
+      this.onPatternReadDone();
+      this.onPatternReadDone = null;
+    }
+    if(this.onPlayFinish) {
+      this.onPlayFinish()
+      this.onPlayFinish = null;
+    }
+
+    this.play_ring = Infinity;
+    this.rings.hide();
+    this.pattern_match = false;
+    this.started_attempt = false;
+    this.bubble.setDuration(this.duration)
+    this.bubble.updateColor("")
+    $(this.blocks.tracker.children().get().reverse()).each((i,trac) => {
+      let delay = 150
+      setTimeout(function() {
+        $(trac).css({
+          "transform":"translateY(100px)"
+        })
+      }.bind(trac),delay)  
+
+      setTimeout(function() {
+        $(this).remove()
+      }.bind(trac),delay + 100)      
+    })
+    this.regeneratePatternOnInfo()
+  }
+  regeneratePatternOnInfo() {
+    $(".current-pattern").text("")
+    for(let i = 0; i < this.pattern_to_recognize.length; i++) {
+      $(".current-pattern").append(
+        "<div style='background-color:" +
+          Colors[this.pattern_to_recognize[i]-1] +
+          "' class='track'></div>"
+      );
+    }
+  }
+  animateBubble() {
+    this.bubble.animate(
+      this.getNextSize(),
+      this.update.bind(this),
+      this.nextRingReached.bind(this)
+    );
   }
 
-  updateBubbleStatus(event) {
-    this.bubble.status = Status[event];
+  nextRingReached() {
+    this.setColor();
+    if (this.play_ring <= this.pattern_to_recognize.length) {
+      this.next_ring = this.getNextFromPattern();
+      return;
+    }
+    if (this.bubble.status === Status.growing) {
+      if (this.next_ring !== this.rings.total) this.next_ring++;
+    } else {
+      if (this.next_ring !== 0) this.next_ring--;
+    }
+  }
+
+  getNextFromPattern() {
+    if (this.play_ring === this.pattern_to_recognize.length) {
+      return 0;
+    }
+    let next_in_pattern = this.pattern_to_recognize[this.play_ring];
+    let next = 0;
+    if (next_in_pattern > this.next_ring + 1) {
+      next = this.next_ring + 1;
+    } else if (next_in_pattern == this.next_ring + 1) {
+      this.play_ring = this.play_ring + 1;
+      next = next_in_pattern;
+      this.track_next = next;
+    } else if (next_in_pattern < this.next_ring - 1) {
+      next = this.next_ring - 1;
+    } else {
+      this.play_ring = this.play_ring + 1;
+      next = next_in_pattern;
+      this.track_next = next
+    }
+    return next;
+  }
+
+  setColor() {
+    this.rings.resetRingsColor();
+    if (this.next_ring === 0) {
+      this.bubble.updateColor("");
+      return;
+    }
+    let ring_to_update = this.next_ring;
+    this.bubble.updateColor(Colors[ring_to_update - 1]);
+    this.rings.updateRingColor(ring_to_update);
+  }
+
+  getNextSize() {
+    let next_ring = this.next_ring;
+    let next_size = 0;
+    if (next_ring <= 0) next_size = 0;
+    else if (next_ring === this.rings.total) next_size = this.bubble.end_size;
+    else next_size = this.rings.sizes[next_ring - 1];
+    return next_size;
+  }
+
+  play(onDone = null) {
+    this.onPlayFinish = onDone;
+    this.play_ring = 0;
+    this.next_ring = 1;
+    this.rings.show();
+    this.update();
   }
 
   updateCurrentAttempt() {
-    if (this.bubble.status === Status.growing)
-      this.current_attempt = [
-        ...this.current_attempt,
-        this.bubble.next_ring - 1,
+    if (!this.started_attempt) {
+      this.started_attempt = true;
+      return;
+    }
+    if(this.next_ring === 1) return
+
+    let ring_activated = 0;
+    if (this.read_for_pattern) {
+      if (this.bubble.status === Status.growing)
+        ring_activated = this.next_ring - 1;
+      else ring_activated = this.next_ring + 1;
+      this.pattern_to_recognize = [
+        ...this.pattern_to_recognize,
+        ring_activated,
       ];
-    else
-      this.current_attempt = [
-        ...this.current_attempt,
-        this.bubble.next_ring + 1,
-      ];
+    } else {
+      if (this.bubble.status === Status.growing)
+        ring_activated = this.next_ring - 1;
+      else ring_activated = this.next_ring + 1;
+      this.current_attempt = [...this.current_attempt, ring_activated];
+    }
+    
+    this.track(ring_activated)
+
+    if (arraysEqual(this.current_attempt, this.pattern_to_recognize))
+      this.patternMatched();
   }
 
-  reachedEnd() {
-    return (
-      (this.bubble.status === Status.shrinking &&
-        this.bubble.current_size <= this.bubble.start_size) ||
-      (this.bubble.status === Status.growing &&
-        this.bubble.current_size >= this.bubble.end_size)
+  track(ring_activated) {
+    this.blocks.tracker.append(
+      "<div style='background-color:" +
+        Colors[ring_activated - 1] +
+        "' class='track'></div>"
     );
+  }
+
+  patternMatched() {
+    this.pattern_match = true;
+    this.next_ring = -1;
+    this.bubble.setDuration(0.1);
+    this.update();
+    if (this.onPatternMatch) {
+      this.onPatternMatch();
+    }
   }
 
   addEventsToButton() {
@@ -130,69 +264,15 @@ class Bubbles {
   getEventHandler(event) {
     this.eventHandler[event] = function (e) {
       e.preventDefault();
-      this.stopUpdate();
-      this.updateBubbleStatus(event);
+      this.rings.show();
+      if (this.next_ring >= 0) this.updateCurrentAttempt();
+      if (this.play_ring < Infinity || this.pattern_match) return;
+      this.bubble.updateStatus(event);
+      if (event === "end") this.next_ring--;
+      else this.next_ring++;
+      this.clearAnimation();
       this.update();
-      if (this.bubble.next_ring > 1) this.updateCurrentAttempt();
     };
     return this.eventHandler[event].bind(this);
   }
-
-  animateBubble() {
-    if (this.animation_timeout) {
-      clearTimeout(this.animation_timeout);
-      this.animation_timeout = null;
-    }
-    this.changed_color = false;
-    this.blocks.bubble.animate(this.getAnimatedProperties(), {
-      duration: this.bubble.duration,
-      easing: "easeOutBounce",
-      complete: this.update.bind(this),
-      step: function (now, tween) {
-        if (this.changed_color) return;
-        let percentage_done = tweenPercentDone(tween);
-        if (percentage_done < 0.9) return;
-        this.setColor();
-        this.changed_color = true;
-      }.bind(this),
-    });
-  }
-
-  getAnimatedProperties() {
-    let next_ring = this.bubble.next_ring;
-    let next_size = 0;
-    if (next_ring === 0) {
-      next_size = this.bubble.start_size;
-    } else if (next_ring === this.rings.total) next_size = this.bubble.end_size;
-    else next_size = this.rings.sizes[next_ring - 1];
-    return getCssSquareFromSize(next_size);
-  }
-
-  setColor() {
-    this.rings.resetRingsColor();
-    if (this.bubble.next_ring === 0) {
-      this.blocks.bubble.css({
-        "background-color": "",
-      });
-      return;
-    }
-
-    this.updateBubbleColor();
-    this.rings.updateRingColor(this.bubble.next_ring - 1);
-  }
-
-  updateBubbleColor() {
-    this.blocks.bubble.css({
-      "background-color": Colors[this.bubble.next_ring - 1],
-    });
-  }
-}
-
-export function getBubbles(
-  rings = 10,
-  start_size = 0.33,
-  end_size = 10.0,
-  duration = 5000
-) {
-  return new Bubbles(rings, start_size, end_size, duration);
 }
