@@ -1,6 +1,25 @@
 export const unit = "vmin";
 export const unit_multiplier = 1.7;
 
+export const Status = {
+  growing: "growing",
+  shrinking: "shrinking",
+  start: "growing",
+  end: "shrinking",
+};
+
+export const Colors = [
+  "#FFE66D",
+  "#4ECDC4",
+  "#FF6B6B",
+  "#802392",
+  "#2E4057",
+  "#750D37",
+  "#562C2C",
+  "#136F63",
+  "#F686BD",
+  "#007C77",
+];
 
 export function getCssPropety(block, property) {
   return block.get(0).style[property]!= ""

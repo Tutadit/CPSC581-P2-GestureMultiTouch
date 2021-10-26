@@ -3,46 +3,30 @@ import {
   getCssSize,
   getCssSquareFromSize,
   getCssSquareSizeNumber,
+  Status,
+  Colors,
 } from "./utilities.js";
 
+import { Rings } from "./rings.js";
+
 // How often ( in milliseconds ) does the size update
-
-const Status = {
-  growing: "growing",
-  shrinking: "shrinking",
-  start: "growing",
-  end: "shrinking",
-};
-
-const Colors = [
-  "#FFE66D",
-  "#4ECDC4",
-  "#FF6B6B",
-  "#802392",
-  "#2E4057",
-  "#750D37",
-  "#562C2C",
-  "#136F63",
-  "#F686BD",
-  "#007C77",
-];
 
 const update_interval = 100;
 
 class Bubbles {
   constructor(rings = 10, start_size = 0.33, end_size = 10.0, duration = 5000) {
+    this.rings = new Rings(rings, start_size, end_size);
     this.initiateBlocks();
     this.initiateBubble(start_size, end_size, duration);
     this.initiateEvents();
-    this.initiateRings(rings);
     this.addEventsToButton();
+    this.initiatePatternRecognition();
   }
 
   initiateBlocks() {
     this.blocks = {
       bubble: $(".bubble"),
       button: $("button.action-button"),
-      rings: $(".bubble-rings"),
     };
   }
 
@@ -54,6 +38,7 @@ class Bubbles {
       current_size: 0,
       status: Status.growing,
       duration: duration,
+      next_ring: 1,
     };
     this.updateBubble();
   }
@@ -70,44 +55,34 @@ class Bubbles {
     };
   }
 
-  initiateRings(total_rings) {
-    let start = this.bubble.start_size;
-    let end = this.bubble.end_size;
-    this.rings = {
-      total: total_rings,
-      next_ring: 1,
-      duration_per_ring: this.bubble.duration / total_rings,
-      radius_increment: (end - start) / total_rings,
-      sizes: [],
-    };
-    this.renderRings();
-  }
-
-  renderRings() {
-    let total_rings = this.rings.total;
-    let radius_increment = this.rings.radius_increment;
-    let start = this.bubble.start_size;
-    for (var ring = 1; ring <= total_rings; ring++) {
-      let diameter_size = radius_increment * ring + start;
-      let diameter_css_size = getCssSize(diameter_size);
-      this.rings.sizes = [...this.rings.sizes, diameter_size];
-      this.blocks.rings.append(
-        "<div class='bubble-wrapper'><div style='width:" +
-          diameter_css_size +
-          "; height:" +
-          diameter_css_size +
-          ";' class='bubble-ring ring-" +
-          ring +
-          "'></div></div>"
-      );
-    }
+  initiatePatternRecognition() {
+    this.pattern_to_recognize = [1, 2, 3];
+    this.current_attempt = [];
   }
 
   update() {
     this.updateBubble();
-    this.updateRings();
     if (this.reachedEnd()) return;
-    this.animateBubble();
+
+    if (this.bubble.next_ring === 0)
+      this.animation_timeout = setTimeout(
+        function () {
+          this.animateBubble();
+          this.current_attempt = [];
+        }.bind(this),
+        this.bubble.duration * 1.5
+      );
+    else this.animateBubble();
+  }
+
+  getNextRing() {
+    let next_ring = 0;
+    if (this.bubble.status === Status.growing) {
+      next_ring = this.rings.getNextBiggerRing(this.bubble.current_size);
+    } else {
+      next_ring = this.rings.getNextSmallerRing(this.bubble.current_size);
+    }
+    return next_ring;
   }
 
   stopUpdate() {
@@ -117,10 +92,24 @@ class Bubbles {
   updateBubble() {
     let bubble = this.blocks.bubble;
     this.bubble.current_size = getCssSquareSizeNumber(bubble);
+    this.bubble.next_ring = this.getNextRing();
   }
 
   updateBubbleStatus(event) {
     this.bubble.status = Status[event];
+  }
+
+  updateCurrentAttempt() {
+    if (this.bubble.status === Status.growing)
+      this.current_attempt = [
+        ...this.current_attempt,
+        this.bubble.next_ring - 1,
+      ];
+    else
+      this.current_attempt = [
+        ...this.current_attempt,
+        this.bubble.next_ring + 1,
+      ];
   }
 
   reachedEnd() {
@@ -130,46 +119,6 @@ class Bubbles {
       (this.bubble.status === Status.growing &&
         this.bubble.current_size >= this.bubble.end_size)
     );
-  }
-
-  updateRings() {
-    let next_ring = 0;
-    if (this.bubble.status === Status.growing) {
-      next_ring = this.getNextSmallerRing();
-    } else {
-      next_ring = this.getNextBiggerRing();
-    }
-    this.rings.next_ring = next_ring;
-  }
-
-  getNextSmallerRing() {
-    let sizes = this.rings.sizes;
-    let current_size = this.bubble.current_size;
-
-    let next_ring = 0;
-    for (let i = 0; i < sizes.length; i++) {
-      let ring_size = sizes[i];
-      if (current_size < ring_size) {
-        next_ring = i + 1;
-        break;
-      }
-    }
-    return next_ring;
-  }
-
-  getNextBiggerRing() {
-    let sizes = this.rings.sizes;
-    let current_size = this.bubble.current_size;
-
-    let next_ring = 0;
-    for (let i = sizes.length - 1; i >= 0; i--) {
-      let ring_size = sizes[i];
-      if (current_size > ring_size) {
-        next_ring = i + 1;
-        break;
-      }
-    }
-    return next_ring;
   }
 
   addEventsToButton() {
@@ -184,14 +133,19 @@ class Bubbles {
       this.stopUpdate();
       this.updateBubbleStatus(event);
       this.update();
+      if (this.bubble.next_ring > 1) this.updateCurrentAttempt();
     };
     return this.eventHandler[event].bind(this);
   }
 
   animateBubble() {
+    if (this.animation_timeout) {
+      clearTimeout(this.animation_timeout);
+      this.animation_timeout = null;
+    }
     this.changed_color = false;
     this.blocks.bubble.animate(this.getAnimatedProperties(), {
-      duration: this.rings.duration_per_ring,
+      duration: this.bubble.duration,
       easing: "easeOutBounce",
       complete: this.update.bind(this),
       step: function (now, tween) {
@@ -205,16 +159,18 @@ class Bubbles {
   }
 
   getAnimatedProperties() {
-    let next_ring = this.rings.next_ring;
+    let next_ring = this.bubble.next_ring;
     let next_size = 0;
-    if (next_ring === 0) next_size = this.bubble.start_size;
+    if (next_ring === 0) {
+      next_size = this.bubble.start_size;
+    } else if (next_ring === this.rings.total) next_size = this.bubble.end_size;
     else next_size = this.rings.sizes[next_ring - 1];
     return getCssSquareFromSize(next_size);
   }
 
   setColor() {
-    this.resetRingsColor();
-    if (this.rings.next_ring === 0) {
+    this.rings.resetRingsColor();
+    if (this.bubble.next_ring === 0) {
       this.blocks.bubble.css({
         "background-color": "",
       });
@@ -222,33 +178,12 @@ class Bubbles {
     }
 
     this.updateBubbleColor();
-    this.updateRingColor();
+    this.rings.updateRingColor(this.bubble.next_ring - 1);
   }
 
   updateBubbleColor() {
     this.blocks.bubble.css({
-      "background-color": Colors[this.rings.next_ring - 1],
-    });
-  }
-
-  updateRingColor() {
-    let rings = this.blocks.rings.children("div");
-    let ring = $(rings.get(this.rings.next_ring - 1))
-      .children()
-      .first();
-    $(ring).css({
-      border: "3px solid " + Colors[this.rings.next_ring - 1],
-      "box-shadow": "0px 0px 4px 3px " + Colors[this.rings.next_ring - 1],
-    });
-  }
-
-  resetRingsColor() {
-    let rings = this.blocks.rings.children("div");
-    rings.each(function (i, ring) {
-      $($(ring).children().first()).css({
-        border: "",
-        "box-shadow": "",
-      });
+      "background-color": Colors[this.bubble.next_ring - 1],
     });
   }
 }
