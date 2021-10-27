@@ -4,16 +4,16 @@ import { extendJqueryEase } from "./utilities.js";
 function onPatternMatch() {
   $(".lock-screen").addClass("hidden");
   $(".main-screen").removeClass("hidden");
-  $(".bubbles").hide()
-  $(".action-button").hide()
+  $(".bubbles").hide();
+  $(".action-button").hide();
 }
 
-function time(){
+function time() {
   let today = new Date();
-  if(today.getMinutes() < 10){
-    var time = today.getHours() + ":" + "0" + today.getMinutes()
-  } else{
-    var time = today.getHours() + ":" + today.getMinutes()
+  if (today.getMinutes() < 10) {
+    var time = today.getHours() + ":" + "0" + today.getMinutes();
+  } else {
+    var time = today.getHours() + ":" + today.getMinutes();
   }
   $(".clock").text(time);
 }
@@ -34,21 +34,21 @@ $(document).ready(function () {
     duration,
     onPatternMatch
   );
-  $(".show-settings").click(function() {
-    $(".the-settings").removeClass("hidden")
-  })
-  $(".close-settings").click(function() {
-    $(".the-settings").addClass("hidden")
-  })
+  $(".show-settings").click(function () {
+    $(".the-settings").removeClass("hidden");
+  });
+  $(".close-settings").click(function () {
+    $(".the-settings").addClass("hidden");
+  });
   $("#play").click(
     function () {
       $(".settings-wrapper").hide();
       setTimeout(
         function () {
-          $(".bubbles").show()          
+          $(".bubbles").show();
           this.play(function () {
-            $(".bubbles").hide()
-            $(".action-button").hide()
+            $(".bubbles").hide();
+            $(".action-button").hide();
             setTimeout(function () {
               $(".settings-wrapper").show();
             }, 500);
@@ -61,8 +61,8 @@ $(document).ready(function () {
   $("#change").click(
     function () {
       $(".settings-wrapper").hide();
-      $(".bubbles").show()
-      $(".action-button").show()
+      $(".bubbles").show();
+      $(".action-button").show();
       this.setPattern(function () {
         setTimeout(function () {
           $(".settings-wrapper").show();
@@ -71,14 +71,16 @@ $(document).ready(function () {
     }.bind(bubbles)
   );
   $(".close-info").click(function () {
-    $(".info").addClass("hidden")
-  })
+    $(".info").addClass("hidden");
+  });
 
-  $(".help-button").click(function(){
-    $(".info").removeClass("hidden")
-  })
-  $("#lock").click(function() {
+  $(".help-button").click(function () {
+    $(".info").removeClass("hidden");
+  });
+  $("#lock").click(function () {
     $(".lock-screen").removeClass("hidden");
     $(".main-screen").addClass("hidden");
-  })
+    $(".bubbles").show();
+    $(".action-button").show();
+  });
 });
