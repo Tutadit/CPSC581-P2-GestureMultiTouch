@@ -4,6 +4,18 @@ import { extendJqueryEase } from "./utilities.js";
 function onPatternMatch() {
   $(".lock-screen").addClass("hidden");
   $(".main-screen").removeClass("hidden");
+  $(".bubbles").hide()
+  $(".action-button").hide()
+}
+
+function time(){
+  let today = new Date();
+  if(today.getMinutes() < 10){
+    var time = today.getHours() + ":" + "0" + today.getMinutes()
+  } else{
+    var time = today.getHours() + ":" + today.getMinutes()
+  }
+  $(".clock").text(time);
 }
 
 $(document).ready(function () {
@@ -12,6 +24,8 @@ $(document).ready(function () {
   let end_size = 40.0;
   let duration = 560;
 
+  time();
+  setInterval(time, 1000);
   extendJqueryEase();
   const bubbles = new Bubbles(
     rings,
@@ -20,12 +34,21 @@ $(document).ready(function () {
     duration,
     onPatternMatch
   );
+  $(".show-settings").click(function() {
+    $(".the-settings").removeClass("hidden")
+  })
+  $(".close-settings").click(function() {
+    $(".the-settings").addClass("hidden")
+  })
   $("#play").click(
     function () {
       $(".settings-wrapper").hide();
       setTimeout(
         function () {
+          $(".bubbles").show()          
           this.play(function () {
+            $(".bubbles").hide()
+            $(".action-button").hide()
             setTimeout(function () {
               $(".settings-wrapper").show();
             }, 500);
@@ -38,6 +61,8 @@ $(document).ready(function () {
   $("#change").click(
     function () {
       $(".settings-wrapper").hide();
+      $(".bubbles").show()
+      $(".action-button").show()
       this.setPattern(function () {
         setTimeout(function () {
           $(".settings-wrapper").show();

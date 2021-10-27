@@ -4,22 +4,79 @@
     <meta charset="utf-8" />
     <title>CPSC581 Project 2 - part 1</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/all.css" />
   </head>
 
   <body>
     <div class="screen main-screen hidden">
-      <div class="settings-panel"></div>
-      <div class="settings-wrapper">
-        <div class="settings">
-          <button id="play">Play Pattern</button>
-          <button id="change">Change Pattern</button>
-          <button id="lock">Lock Screen</button>
+      <div class="top-bar">
+        <div class="clock">12:44</div>
+        <div class="icons">
+          <i class="fas fa-battery-full"></i>
+          <i class="fas fa-wifi"></i>
+          <i class="fas fa-signal"></i>
+        </div>
+      </div>
+      <div class="apps">
+        <img src="https://img.icons8.com/color/96/000000/uber-app.png" />
+        <img src="https://img.icons8.com/plasticine/100/000000/notes-app.png" />
+        <img
+          src="https://img.icons8.com/color/96/000000/amazon_shopping_app.png"
+        />
+        <img src="https://img.icons8.com/color/96/000000/mcdonalds-app.png" />
+        <button class="show-settings">
+          <img
+            src="https://img.icons8.com/color/100/000000/apple-settings.png"
+          />
+        </button>
+        <img
+          src="https://img.icons8.com/fluency/96/000000/netflix-desktop-app.png"
+        />
+        <img
+          src="https://img.icons8.com/fluency/96/000000/apple-app-store.png"
+        />
+        <img src="https://img.icons8.com/color/96/000000/calendar-app.png" />
+        <img
+          src="https://img.icons8.com/color/96/000000/telegram-app--v1.png"
+        />
+        <img src="https://img.icons8.com/color/100/000000/procreate.png" />
+        <img src="https://img.icons8.com/fluency/100/000000/snapchat.png" />
+        <img src="https://img.icons8.com/fluency/96/000000/apple-fitness.png" />
+        <img src="https://img.icons8.com/color/100/000000/tiktok--v1.png" />
+        <img src="https://img.icons8.com/color/96/000000/--tinder.png" />
+        <img
+          src="https://img.icons8.com/color-glass/96/000000/facebook-f.png"
+        />
+        <img src="https://img.icons8.com/color/96/000000/whatsapp--v1.png" />
+        <img src="https://img.icons8.com/color/100/000000/spotify--v1.png" />
+        <img
+          src="https://img.icons8.com/color/100/000000/facebook-messenger--v1.png"
+        />
+      </div>
+      <div class="the-settings hidden">
+        <button class="close-settings">X</button>
+        <div class="settings-panel"></div>
+        <div class="settings-wrapper">
+          <div class="settings">
+            <button id="play">Play Pattern</button>
+            <button id="change">Change Pattern</button>
+            <button id="lock">Lock Screen</button>
+          </div>
         </div>
       </div>
     </div>
     <div class="screen lock-screen">
       <div class="screen-content">
+        <div class="top-bar">
+          <div class=""></div>
+          <div class="icons">
+            <i class="fas fa-battery-full"></i>
+            <i class="fas fa-wifi"></i>
+            <i class="fas fa-signal"></i>
+          </div>
+        </div>
         <div class="clock">12:44</div>
+        <div class="start-message">Tap and hold to begin</div>
       </div>
       <button class="help-button">?</button>
     </div>
