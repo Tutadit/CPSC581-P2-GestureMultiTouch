@@ -38,6 +38,8 @@ $(document).ready(function () {
     $(".the-settings").removeClass("hidden");
   });
   $(".close-settings").click(function () {
+    $(".bubbles").hide();
+    $(".action-button").hide();
     $(".the-settings").addClass("hidden");
   });
   $("#play").click(
@@ -65,6 +67,8 @@ $(document).ready(function () {
       $(".action-button").show();
       this.setPattern(function () {
         setTimeout(function () {
+          $(".bubbles").hide();
+          $(".action-button").hide();
           $(".settings-wrapper").show();
         }, 500);
       });
