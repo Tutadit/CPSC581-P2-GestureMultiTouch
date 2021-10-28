@@ -89,10 +89,11 @@ export class Rings {
 
     rings.each(function (i, ring_e) {
       let ring = $($(ring_e).children().first());
-
-      ring.css({ transition: "none" });
+      let delay = getCssPropety(ring,"transition-delay")
+      let duration = getCssPropety(ring,"transition-duration")
+      ring.css({ "transition-delay": 0,"transition-duration":0 });
       ring.css({ "box-shadow": "", border: "" });
-      ring.css({ transition: "" });
+      ring.css({ "transition-delay": delay,"transition-duration": duration});
     });
   }
 }

@@ -45,13 +45,13 @@ export class Bubble {
             opacity: 0,
           },
       {
-        duration: to_size > 0 ? this.duration : 0.1,
-        easing: "easeOutBounce",
+        duration: to_size > 0 ? this.duration : 0,
+        easing: to_size > 0 ? "easeOutBounce" : "linear",
         complete: onComplete,
         step: function (now, tween) {
           if (this.changed_color) return;
           let percentage_done = tweenPercentDone(tween);
-          if (percentage_done < 0.98) return;
+          if (percentage_done < 0.96) return;
           
           this.onMaxSizeReached();
           this.changed_color = true;
