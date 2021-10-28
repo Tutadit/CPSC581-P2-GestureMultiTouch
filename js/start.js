@@ -22,7 +22,7 @@ $(document).ready(function () {
   let rings = 5;
   let start_size = 1;
   let end_size = 40.0;
-  let duration = 560;
+  let duration = 450;
 
   time();
   setInterval(time, 1000);

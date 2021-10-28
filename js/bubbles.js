@@ -114,6 +114,7 @@ export class Bubbles {
     this.started_attempt = false;
     this.bubble.setDuration(this.duration);
     this.bubble.updateColor("");
+    this.bubble.reset();
     $(".start-message").css({ opacity:1})
     $(this.blocks.tracker.children().get().reverse()).each((i, trac) => {
       let delay = 150;
@@ -268,7 +269,7 @@ export class Bubbles {
     this.bubble.setDuration(0.1);
     this.update();
     if (this.onPatternMatch) {
-      this.onPatternMatch();
+      setTimeout(this.onPatternMatch, ( this.rings.total -1 ) * 100)
     }
   }
 
