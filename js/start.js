@@ -82,7 +82,7 @@ $(document).ready(function () {
     $(".info").removeClass("hidden");
   });
   $("#lock").click(function () {
-    $(".the-settings").hide();
+    $(".the-settings").addClass("hidden");
     $(".lock-screen").removeClass("hidden");
     $(".main-screen").addClass("hidden");
     $(".bubbles").show();
