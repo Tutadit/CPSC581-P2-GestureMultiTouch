@@ -196,6 +196,7 @@ export class Bubbles {
       return;
     }
     let ring_to_update = this.next_ring;
+    if (ring_to_update < 1 || ring_to_update <= this.rings.total)
     this.bubble.updateColor(Colors[ring_to_update - 1]);
     this.rings.updateRingColor(ring_to_update);
   }
