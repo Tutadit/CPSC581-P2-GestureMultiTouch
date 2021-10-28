@@ -82,6 +82,7 @@ $(document).ready(function () {
     $(".info").removeClass("hidden");
   });
   $("#lock").click(function () {
+    $(".settings-wrapper").hide();
     $(".lock-screen").removeClass("hidden");
     $(".main-screen").addClass("hidden");
     $(".bubbles").show();
